@@ -1,14 +1,19 @@
-const sqlite3 = require("sqlite3").verbose();
+const Database = require("better-sqlite3");
 
-const db = new sqlite3.Database("./calls.db");
+// crea / apre il database
+const db = new Database("calls.db");
 
-// crea tabella
-db.serialize(() => {
-  db.run(
-    `INSERT INTO calls (tenant_id, from_number, to_number, type, raw_text, time)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [tenantId, from, to, callType, userText, time]
-  );
-});
+// crea tabella se non esiste
+db.exec(`
+  CREATE TABLE IF NOT EXISTS calls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT,
+    from_number TEXT,
+    to_number TEXT,
+    type TEXT,
+    raw_text TEXT,
+    time TEXT
+  )
+`);
 
 module.exports = db;
