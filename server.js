@@ -3,14 +3,26 @@ const app = express();
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(express.static("public"));
 
-// TEST ROOT
+// 📊 memoria ultima chiamata
+let lastCall = null;
+
+// 🏠 TEST ROOT
 app.get("/", (req, res) => {
   res.send("AI Receptionist online");
 });
 
-// VOICE WEBHOOK
+// 📞 VOICE WEBHOOK (UNO SOLO)
 app.post("/voice", (req, res) => {
+
+  // salva chiamata
+  lastCall = {
+    from: req.body.From,
+    to: req.body.To,
+    time: new Date()
+  };
+
   res.set("Content-Type", "text/xml");
 
   res.send(`
@@ -20,6 +32,15 @@ app.post("/voice", (req, res) => {
   `);
 });
 
+// 📊 STATUS API (dashboard)
+app.get("/status", (req, res) => {
+  res.json({
+    status: "online",
+    lastCall
+  });
+});
+
+// 🚀 START SERVER
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

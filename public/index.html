@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Receptionist Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+    .box {
+      background: #1e293b;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📞 AI Receptionist Dashboard</h1>
+
+<div class="box">
+  <h3>Status</h3>
+  <p id="status">Loading...</p>
+</div>
+
+<div class="box">
+  <h3>Ultima chiamata</h3>
+  <pre id="call">Nessuna chiamata ancora</pre>
+</div>
+
+<script>
+async function loadStatus() {
+  const res = await fetch("/status");
+  const data = await res.json();
+
+  document.getElementById("status").innerText = data.status;
+  document.getElementById("call").innerText = JSON.stringify(data.lastCall, null, 2);
+}
+
+setInterval(loadStatus, 3000);
+loadStatus();
+</script>
+
+</body>
+</html>
