@@ -1,52 +1,40 @@
 import express from "express";
+import db from "./database.js";
+
 const app = express();
-const db = require("./database");
 
-
-/* =========================
-   MIDDLEWARE
-========================= */
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(express.static("public"));
 
-/* =========================
-   MEMORY STORAGE (TEMP DB)
-========================= */
-const calls = [];
-
-/* =========================
-   🧠 CALL CLASSIFICATION ENGINE
-========================= */
+/* -------------------------
+   CLASSIFICAZIONE CHIAMATE
+--------------------------*/
 function classifyCall(text) {
   if (!text) return "unknown";
 
   const t = text.toLowerCase();
 
-  if (t.includes("dolore") || t.includes("male")) return "emergency";
-  if (t.includes("appuntamento") || t.includes("prenot")) return "booking";
-  if (t.includes("orari") || t.includes("aperto")) return "info";
-
+  if (t.includes("dolore")) return "emergency";
+  if (t.includes("appuntamento")) return "booking";
   return "info";
 }
 
-/* =========================
-   🏠 ROOT TEST
-========================= */
-app.get("/", (_, res) => {
+/* -------------------------
+   ROOT TEST
+--------------------------*/
+app.get("/", (req, res) => {
   res.send("AI Receptionist online");
 });
 
-/* =========================
-   📞 TWILIO WEBHOOK
-========================= */
+/* -------------------------
+   VOICE WEBHOOK (TWILIO)
+--------------------------*/
 app.post("/voice", async (req, res) => {
-
   const userText = req.body.SpeechResult || "";
   const callType = classifyCall(userText);
 
   const tenantId = req.body.To || "unknown";
-
   const from = req.body.From || "unknown";
   const to = req.body.To || "unknown";
   const time = new Date().toISOString();
@@ -62,57 +50,46 @@ app.post("/voice", async (req, res) => {
   res.send(`
     <Response>
       <Say voice="alice">
-        Chiamata registrata come ${callType}
+        Grazie, la tua richiesta è stata registrata come ${callType}.
       </Say>
     </Response>
   `);
 });
 
-/* =========================
-   📊 DASHBOARD API
-========================= */
-app.get("/calls", (_, res) => {
+/* -------------------------
+   GET CALLS (DASHBOARD API)
+--------------------------*/
+app.get("/calls/:tenant?", async (req, res) => {
+  const tenant = req.params.tenant;
 
-  db.all(`SELECT * FROM calls ORDER BY id DESC`, [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  let result;
 
-    res.json(rows);
-  });
-  
-    app.get("/calls/:tenant?", async (req, res) => {
-  
-      const tenant = req.params.tenant;
-    
-      let result;
-    
-      if (tenant) {
-        result = await db.query(
-          "SELECT * FROM calls WHERE tenant_id = $1 ORDER BY id DESC",
-          [tenant]
-        );
-      } else {
-        result = await db.query(
-          "SELECT * FROM calls ORDER BY id DESC"
-        );
-      }
-    
-      res.json(result.rows);
-    });
-  });
-app.get("/status", (_, res) => {
+  if (tenant) {
+    result = await db.query(
+      "SELECT * FROM calls WHERE tenant_id = $1 ORDER BY id DESC",
+      [tenant]
+    );
+  } else {
+    result = await db.query(
+      "SELECT * FROM calls ORDER BY id DESC"
+    );
+  }
+
+  res.json(result.rows);
+});
+
+/* -------------------------
+   STATUS
+--------------------------*/
+app.get("/status", (req, res) => {
   res.json({
-    status: "online",
-    totalCalls: calls.length,
-    lastCall: calls[calls.length - 1] || null
+    status: "online"
   });
 });
 
-
-/* =========================
-   🚀 START SERVER
-========================= */
+/* -------------------------
+   START SERVER
+--------------------------*/
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
