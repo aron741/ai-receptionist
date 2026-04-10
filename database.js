@@ -1,19 +1,27 @@
-const Database = require("better-sqlite3");
+const { Pool } = require("pg");
 
-// crea / apre il database
-const db = new Database("calls.db");
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 // crea tabella se non esiste
-db.exec(`
-  CREATE TABLE IF NOT EXISTS calls (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tenant_id TEXT,
-    from_number TEXT,
-    to_number TEXT,
-    type TEXT,
-    raw_text TEXT,
-    time TEXT
-  )
-`);
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS calls (
+      id SERIAL PRIMARY KEY,
+      tenant_id TEXT,
+      from_number TEXT,
+      to_number TEXT,
+      type TEXT,
+      raw_text TEXT,
+      time TEXT
+    )
+  `);
+}
 
-module.exports = db;
+initDB();
+
+module.exports = pool;
