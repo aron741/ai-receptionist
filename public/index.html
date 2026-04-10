@@ -1,64 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
+  <meta charset="UTF-8" />
   <title>Dentariox Dashboard</title>
+
   <style>
-    body { font-family: Arial; padding: 20px; }
-    h1 { color: #333; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f3fbff, #fbfdff);
+      color: #1e2a3a;
+    }
+
+    header {
+      background: #00bff3;
+      color: white;
+      padding: 18px 22px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    /* KPI */
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .kpi {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+
+    .kpi h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #00bff3;
+    }
+
+    .kpi span {
+      font-size: 13px;
+      color: #777;
+    }
+
+    /* INPUT BAR */
+    .topbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
 
     button {
-      margin: 5px;
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .card {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin: 10px 0;
+      padding: 10px 15px;
+      border: none;
       border-radius: 8px;
+      background: #00bff3;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
     }
 
-    .emergency { background: #ffe5e5; }
-    .booking { background: #e5f0ff; }
-    .info { background: #f5f5f5; }
+    button:hover {
+      background: #009ecc;
+    }
+
+    /* FILTERS */
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    /* CARDS */
+    .card {
+      background: white;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      border-left: 5px solid #00bff3;
+    }
+
+    .emergency { border-left-color: #e74c3c; }
+    .booking { border-left-color: #27ae60; }
+    .info { border-left-color: #f39c12; }
+
+    .meta {
+      font-size: 13px;
+      color: #666;
+      margin-top: 4px;
+    }
   </style>
 </head>
 
 <body>
 
-<h1>Dentariox Dashboard</h1>
+<header>
+  🦷 Dentariox AI Receptionist Dashboard
+</header>
 
-<input id="tenant" placeholder="Numero studio (es: +39...)" />
-<button onclick="loadCalls()">Carica</button>
+<div class="container">
 
-<br><br>
+  <!-- KPI -->
+  <div class="kpis">
+    <div class="kpi">
+      <h2 id="total">0</h2>
+      <span>Chiamate Totali</span>
+    </div>
 
-<button onclick="filterCalls('all')">Tutte</button>
-<button onclick="filterCalls('emergency')">Emergenze</button>
-<button onclick="filterCalls('booking')">Appuntamenti</button>
-<button onclick="filterCalls('info')">Info</button>
+    <div class="kpi">
+      <h2 id="emergency">0</h2>
+      <span>Emergenze</span>
+    </div>
 
-<div id="calls"></div>
+    <div class="kpi">
+      <h2 id="booking">0</h2>
+      <span>Appuntamenti</span>
+    </div>
+
+    <div class="kpi">
+      <h2 id="info">0</h2>
+      <span>Info</span>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="topbar">
+    <input id="tenant" placeholder="ID studio (es: +39...)" />
+    <button onclick="loadCalls()">Carica chiamate</button>
+  </div>
+
+  <!-- FILTRI -->
+  <div class="filters">
+    <button onclick="filterCalls('all')">Tutte</button>
+    <button onclick="filterCalls('emergency')">Emergenze</button>
+    <button onclick="filterCalls('booking')">Appuntamenti</button>
+    <button onclick="filterCalls('info')">Info</button>
+  </div>
+
+  <!-- LISTA -->
+  <div id="calls"></div>
+
+</div>
 
 <script>
 let allCalls = [];
 
 async function loadCalls() {
-  const tenant = document.getElementById('tenant').value;
+  const tenant = document.getElementById("tenant").value;
 
   const res = await fetch(`/calls/${tenant}`);
   const data = await res.json();
 
   allCalls = data;
+
+  updateKPIs(data);
   render(data);
+}
+
+function updateKPIs(data) {
+  document.getElementById("total").innerText = data.length;
+  document.getElementById("emergency").innerText = data.filter(c => c.type === "emergency").length;
+  document.getElementById("booking").innerText = data.filter(c => c.type === "booking").length;
+  document.getElementById("info").innerText = data.filter(c => c.type === "info").length;
 }
 
 function filterCalls(type) {
   if (type === "all") return render(allCalls);
-
-  const filtered = allCalls.filter(c => c.type === type);
-  render(filtered);
+  render(allCalls.filter(c => c.type === type));
 }
 
 function render(calls) {
@@ -67,14 +193,13 @@ function render(calls) {
 
   calls.forEach(call => {
     const div = document.createElement("div");
-
     div.className = `card ${call.type}`;
 
     div.innerHTML = `
-      <strong>${call.type.toUpperCase()}</strong><br>
-      Da: ${call.from_number}<br>
-      Testo: ${call.raw_text || "N/A"}<br>
-      Ora: ${call.time}
+      <strong>${call.type.toUpperCase()}</strong>
+      <div class="meta">📞 ${call.from_number}</div>
+      <div class="meta">📝 ${call.raw_text || "N/A"}</div>
+      <div class="meta">⏱ ${call.time}</div>
     `;
 
     container.appendChild(div);
