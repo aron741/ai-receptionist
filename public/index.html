@@ -1,30 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AI Receptionist Dashboard</title>
+  <title>Dentariox Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    h1 { color: #333; }
+
+    button {
+      margin: 5px;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+
+    .emergency { background: #ffe5e5; }
+    .booking { background: #e5f0ff; }
+    .info { background: #f5f5f5; }
+  </style>
 </head>
+
 <body>
 
-<h1>Dashboard Chiamate</h1>
+<h1>Dentariox Dashboard</h1>
 
-<button onclick="loadCalls()">Carica Chiamate</button>
+<input id="tenant" placeholder="Numero studio (es: +39...)" />
+<button onclick="loadCalls()">Carica</button>
 
-<ul id="calls"></ul>
+<br><br>
+
+<button onclick="filterCalls('all')">Tutte</button>
+<button onclick="filterCalls('emergency')">Emergenze</button>
+<button onclick="filterCalls('booking')">Appuntamenti</button>
+<button onclick="filterCalls('info')">Info</button>
+
+<div id="calls"></div>
 
 <script>
+let allCalls = [];
+
 async function loadCalls() {
-  const res = await fetch('/calls');
+  const tenant = document.getElementById('tenant').value;
+
+  const res = await fetch(`/calls/${tenant}`);
   const data = await res.json();
 
-  const list = document.getElementById('calls');
-  list.innerHTML = "";
+  allCalls = data;
+  render(data);
+}
 
-  data.forEach(call => {
-    const li = document.createElement('li');
-    li.textContent = `
-      Tipo: ${call.type} | Da: ${call.from_number} | Ora: ${call.time}
+function filterCalls(type) {
+  if (type === "all") return render(allCalls);
+
+  const filtered = allCalls.filter(c => c.type === type);
+  render(filtered);
+}
+
+function render(calls) {
+  const container = document.getElementById("calls");
+  container.innerHTML = "";
+
+  calls.forEach(call => {
+    const div = document.createElement("div");
+
+    div.className = `card ${call.type}`;
+
+    div.innerHTML = `
+      <strong>${call.type.toUpperCase()}</strong><br>
+      Da: ${call.from_number}<br>
+      Testo: ${call.raw_text || "N/A"}<br>
+      Ora: ${call.time}
     `;
-    list.appendChild(li);
+
+    container.appendChild(div);
   });
 }
 </script>
