@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>AI Receptionist Dashboard</title>
+
   <style>
     body {
       font-family: Arial;
@@ -9,39 +10,82 @@
       color: white;
       padding: 20px;
     }
-    .box {
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .card {
       background: #1e293b;
       padding: 15px;
-      margin: 10px 0;
-      border-radius: 10px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    .emergency { background: red; }
+    .booking { background: green; }
+    .info { background: blue; }
+    .unknown { background: gray; }
+
+    .time {
+      font-size: 12px;
+      opacity: 0.7;
     }
   </style>
 </head>
+
 <body>
 
 <h1>📞 AI Receptionist Dashboard</h1>
 
-<div class="box">
-  <h3>Status</h3>
-  <p id="status">Loading...</p>
-</div>
-
-<div class="box">
-  <h3>Ultima chiamata</h3>
-  <pre id="call">Nessuna chiamata ancora</pre>
-</div>
+<div id="calls"></div>
 
 <script>
-async function loadStatus() {
-  const res = await fetch("/status");
+async function loadCalls() {
+  const res = await fetch("/calls");
   const data = await res.json();
 
-  document.getElementById("status").innerText = data.status;
-  document.getElementById("call").innerText = JSON.stringify(data.lastCall, null, 2);
+  const container = document.getElementById("calls");
+  container.innerHTML = "";
+
+  data.forEach(call => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <div>
+        <strong>From:</strong> ${call.from_number || call.from}
+      </div>
+
+      <div>
+        <strong>Type:</strong>
+        <span class="badge ${call.type}">
+          ${call.type}
+        </span>
+      </div>
+
+      <div class="time">
+        ${call.time}
+      </div>
+
+      <div>
+        ${call.raw_text || ""}
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
 }
 
-setInterval(loadStatus, 3000);
-loadStatus();
+setInterval(loadCalls, 3000);
+loadCalls();
 </script>
 
 </body>
