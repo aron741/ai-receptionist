@@ -1,41 +1,27 @@
-// server.js
-
-require("dotenv").config();
-
 const express = require("express");
-const bodyParser = require("body-parser");
-
-// controllers
-const {
-  handleIncomingCall,
-  processIntent
-} = require("./src/twilioController");
-
 const app = express();
 
-// middleware per Twilio (IMPORTANTISSIMO)
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
-// 🏠 route base (test server)
+// TEST ROOT
 app.get("/", (req, res) => {
-  res.send("🚀 AI Receptionist Server is running");
+  res.send("AI Receptionist online");
 });
 
-// 📞 webhook principale Twilio (incoming call)
-app.post("/voice", handleIncomingCall);
+// VOICE WEBHOOK
+app.post("/voice", (req, res) => {
+  res.set("Content-Type", "text/xml");
 
-// 🧠 gestione intent / routing
-app.post("/process-intent", processIntent);
-
-// ❤️ health check (utile per deploy)
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+  res.send(`
+    <Response>
+      <Say voice="alice">Ciao, la segreteria automatica è attiva.</Say>
+    </Response>
+  `);
 });
 
-// 🚀 start server
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log("Server running on", PORT);
 });
