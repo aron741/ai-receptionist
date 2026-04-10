@@ -1,7 +1,7 @@
 // twilioController.js
 
 const { VoiceResponse } = require("twilio").twiml;
-const { resolveTenant } = require("./tenantResolver");
+//const { resolveTenant } = require("./tenantResolver");
 const { decideAction } = require("./rules");
 
 // endpoint principale chiamato da Twilio
