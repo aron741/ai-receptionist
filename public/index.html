@@ -2,90 +2,31 @@
 <html>
 <head>
   <title>AI Receptionist Dashboard</title>
-
-  <style>
-    body {
-      font-family: Arial;
-      background: #0f172a;
-      color: white;
-      padding: 20px;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-    }
-
-    .card {
-      background: #1e293b;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 12px;
-    }
-
-    .badge {
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      display: inline-block;
-    }
-
-    .emergency { background: red; }
-    .booking { background: green; }
-    .info { background: blue; }
-    .unknown { background: gray; }
-
-    .time {
-      font-size: 12px;
-      opacity: 0.7;
-    }
-  </style>
 </head>
-
 <body>
 
-<h1>📞 AI Receptionist Dashboard</h1>
+<h1>Dashboard Chiamate</h1>
 
-<div id="calls"></div>
+<button onclick="loadCalls()">Carica Chiamate</button>
+
+<ul id="calls"></ul>
 
 <script>
 async function loadCalls() {
-  const res = await fetch("/calls");
+  const res = await fetch('/calls');
   const data = await res.json();
 
-  const container = document.getElementById("calls");
-  container.innerHTML = "";
+  const list = document.getElementById('calls');
+  list.innerHTML = "";
 
   data.forEach(call => {
-    const div = document.createElement("div");
-    div.className = "card";
-
-    div.innerHTML = `
-      <div>
-        <strong>From:</strong> ${call.from_number || call.from}
-      </div>
-
-      <div>
-        <strong>Type:</strong>
-        <span class="badge ${call.type}">
-          ${call.type}
-        </span>
-      </div>
-
-      <div class="time">
-        ${call.time}
-      </div>
-
-      <div>
-        ${call.raw_text || ""}
-      </div>
+    const li = document.createElement('li');
+    li.textContent = `
+      Tipo: ${call.type} | Da: ${call.from_number} | Ora: ${call.time}
     `;
-
-    container.appendChild(div);
+    list.appendChild(li);
   });
 }
-
-setInterval(loadCalls, 3000);
-loadCalls();
 </script>
 
 </body>
